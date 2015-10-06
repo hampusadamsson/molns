@@ -354,7 +354,18 @@ class OpenStackProvider(OpenStackBase):
        # Try to attach a floating IP to the controller
         logging.info("Attaching floating ip to the server...")
         try:
-            floating_ip = self.nova.floating_ips.create(self.config['floating_ip_pool'])
+            #floating_ip = self.nova.floating_ips.create(self.config['floating_ip_pool'])
+	    floating_ip_list = self.nova.floating_ips.list()
+            floating_ip = None
+            for fips in floating_ip_list:
+                if fips.instance_id == None:
+                    floating_ip = fips.ip
+                    break
+
+            if floating_ip == None: 
+                #Have to create fip no free one existing
+                floating_ip = self.nova.floating_ips.create(self.config['floating_ip_pool'])
+            
             instance.add_floating_ip(floating_ip)
             logging.debug("ip={0}".format(floating_ip.ip))
             return floating_ip.ip
